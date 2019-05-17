@@ -39,10 +39,12 @@ K = CovFunc(samples(:,1:end-1),samples(:,1:end-1));
 %K_inv = pinv(K+1e-8*eye(size(K)));
 K_inv = pinv(K);
     
-sim_time = 0:0.25:total_time;
+sim_time = 0:0.5:total_time;
 sim_y = zeros(length(sim_time),1);
 sim_y(1) = y(1);
 sigma2 = zeros(length(sim_time),1);
+
+v0 = 0.0045;
 
 for i = 1:length(sim_time)-1
     
@@ -56,15 +58,16 @@ for i = 1:length(sim_time)-1
     
     k = CovFunc([sim_y(i);u],[sim_y(i);u]);
     
-    sigma2(i) = k - k_vec' * K_inv * k_vec;
+    sigma2(i) = k - k_vec' * K_inv * k_vec+v0;
     
 end
 
 hold on
 plot(t,y)
-plot(sim_time,sim_y,'.-')
+plot(sim_time,sim_y,'-.')
 plot(sample_time,samples(1,:),'k.')
-%plot(sim_time,sim_y+sigma2,'b--')
+plot(sim_time,sim_y+sqrt(sigma2),'r')
+plot(sim_time,sim_y-sqrt(sigma2),'r')
 
 function new_y = dynamics(y,u,dt)
 

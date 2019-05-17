@@ -4,8 +4,8 @@ function C = CovFunc(X,Y)
     %Y : #states x #samples
 
     w = [0.2948;0.1323];
-    v0 = 6.2618;
-    v1 = 0.0045;
+    v1 = 6.2618;
+    v0 = 0.0045;
     
     matrix = zeros(size(X,2),size(Y,2));
     
