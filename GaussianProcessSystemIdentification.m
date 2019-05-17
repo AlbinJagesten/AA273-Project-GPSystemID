@@ -3,7 +3,8 @@ clc
 clear
 
 dt = 0.001;
-t = 1:dt:100;
+total_time = 100;
+t = 1:dt:total_time;
 
 y = zeros(length(t),1);
 
@@ -33,28 +34,15 @@ for i = 1:length(t)-1
     
 end
 
-w = [0.1323;0.2948];
-v0 = 6.2618;
-%v0 = 0;
-v1 = 0.0045;
+K = CovFunc(samples(:,1:end-1),samples(:,1:end-1));
 
-C = @(x,y) v0*exp(-1/2*w'*(x-y).^2)+v1;
-
-K = zeros(length(sample_time)-1);
-
-for i = 1:length(sample_time)-1
-    for j = 1:length(sample_time)-1
-
-        K(i,j) = C(samples(:,i),samples(:,j));
-
-    end
-end
-
-K = K + 0.1 * eye(size(K));
+%K_inv = pinv(K+1e-8*eye(size(K)));
 K_inv = pinv(K);
-
-sim_time = 0:0.1:100;
+    
+sim_time = 0:0.25:total_time;
 sim_y = zeros(length(sim_time),1);
+sim_y(1) = y(1);
+sigma2 = zeros(length(sim_time),1);
 
 for i = 1:length(sim_time)-1
     
@@ -62,20 +50,21 @@ for i = 1:length(sim_time)-1
     
     u = samples(2,idx);
     
-    k_vec =  zeros(length(sample_time)-1,1);
-   
-    for j = 1:length(sample_time)-1
-        k_vec(j) = C(samples(:,j),[sim_y(i);u]);
-    end
+    k_vec =  CovFunc(samples(:,1:end-1), [sim_y(i);u]);
     
     sim_y(i+1) = k_vec' * (K_inv * samples(1,2:end)');
+    
+    k = CovFunc([sim_y(i);u],[sim_y(i);u]);
+    
+    sigma2(i) = k - k_vec' * K_inv * k_vec;
     
 end
 
 hold on
- plot(t,y)
-plot(sim_time,sim_y)
-
+plot(t,y)
+plot(sim_time,sim_y,'.-')
+plot(sample_time,samples(1,:),'k.')
+%plot(sim_time,sim_y+sigma2,'b--')
 
 function new_y = dynamics(y,u,dt)
 
