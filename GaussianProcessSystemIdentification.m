@@ -47,8 +47,8 @@ end
 train_samples_output = samples(1,2:end);
 train_samples_input = samples(:,1:end-1);
 population_size = 40;                               %classic setting = 10x num of hyperparameters
-maxIter = 20;
-min_hyperparam = [0; 0; 0; 0.05];
+maxIter = 200;
+min_hyperparam = [0; 0; 0; 0.0005];
 max_hyperparam = [7; 7; 7; 7];
 F_weight = 0.8;                                     %classic setting = 0.8
 CR = 0.9;                                           %classic setting = 0.9
