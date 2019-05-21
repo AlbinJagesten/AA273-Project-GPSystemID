@@ -44,27 +44,33 @@ end
 
 
 %% Finding optimum hyperparameters
-train_samples_output = samples(1,:);
-train_samples_input = samples(2,:);
+train_samples_output = samples(1,2:end);
+train_samples_input = samples(:,1:end-1);
 population_size = 40;                               %classic setting = 10x num of hyperparameters
-maxIter = 100;
-min_hyperparam = [0; 0; 6; 0];
-max_hyperparam = [1; 1; 7; 0.01];
+maxIter = 200;
+min_hyperparam = [-8; -8; -8; -8];
+max_hyperparam = [7; 7; 7; 7];
 F_weight = 0.8;                                     %classic setting = 0.8
 CR = 0.9;                                           %classic setting = 0.9
 
-opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR);
+opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR, 0.01);
 
 
 
 %% Getting kernel
+ w = [0.2948; 0.1323];
+    v1 = 6.2618;
+    v0 = 0.0045;
+%opt_hyp_param = [w; v1; v0];
 K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyp_param);
-log_likelihood_K = LogLikelihood(K, samples(1,1:end-1));
-noisy_K_inv = inv(K + Q*(eye(size(K)))); 
+log_likelihood_K = LogLikelihood(K, samples(1,2:end), 0.1)
+noisy_K_inv = pinv(K + Q*(eye(size(K)))); 
+
+
 
 %% Prediction
 
-sim_time = 0:0.5:total_time;
+sim_time = 0:0.25:total_time;
 sim_y = zeros(length(sim_time),1);
 sim_y(1) = y(1);
 sigma_pred = zeros(length(sim_time),1);

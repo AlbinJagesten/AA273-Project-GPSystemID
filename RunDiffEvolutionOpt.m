@@ -1,17 +1,15 @@
-function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR)
+function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR, Q)
     
     %% variable declaration and initializations
     
     num_param = size(min_hyperparam, 1);
-    
-    train_samples = [train_samples_output; train_samples_input];
-    
+  
     current_pop = zeros(num_param, population_size);
     current_log_likelihood = zeros(1, population_size);
     
     opt_hyp_param = (min_hyperparam + max_hyperparam)/2;        %arbitrary
-    K_temp = CovFunc(train_samples, train_samples, opt_hyp_param);
-    opt_log_lik = LogLikelihood(K_temp, train_samples_output);
+    K_temp = CovFunc(train_samples_input, train_samples_input, opt_hyp_param);
+    opt_log_lik = LogLikelihood(K_temp, train_samples_output, Q);
     
     
     %% generating initial population
@@ -25,10 +23,10 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     %% evaluating initial optimum
     
     for i = 1:population_size
-        K = CovFunc(train_samples, train_samples, current_pop(:,i));
-        current_log_likelihood(i) = LogLikelihood(K,train_samples_output);
+        K = CovFunc(train_samples_input, train_samples_input, current_pop(:,i));
+        current_log_likelihood(i) = LogLikelihood(K, train_samples_output, Q);
         if current_log_likelihood(i) > opt_log_lik
-            opt_log_lik = LogLikelihood(K,train_samples_output);
+            opt_log_lik = LogLikelihood(K, train_samples_output, Q);
             opt_hyp_param = current_pop(:,i);
         end
     end
@@ -38,6 +36,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     %% iterating to find optimum parameters
     
     for iter = 1:maxIter
+        iter
         % GENERATING NEW CANDIDATE POPULATION
         %scrambling the population and creating 3 new sets offsets are used to make 1 set of scrambled indices into 3 by
         %shifting the indices by this constant offset; this is better than using randperm 3 times as this ensures that 
@@ -79,8 +78,8 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
                end   
             end
             
-            K = CovFunc(train_samples, train_samples, new_pop(:,i));
-            new_log_likelihood = LogLikelihood(K,train_samples_output);
+            K = CovFunc(train_samples_input, train_samples_input, new_pop(:,i));
+            new_log_likelihood = LogLikelihood(K, train_samples_output, Q);
             if new_log_likelihood > current_log_likelihood(i)
                 current_pop(:,i) = new_pop(:,i);
                 current_log_likelihood(i) = new_log_likelihood;
