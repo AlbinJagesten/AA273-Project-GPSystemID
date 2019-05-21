@@ -19,6 +19,6 @@ function C = CovFunc(X,Y, hyper_param)
         end
     end
 
-    C = v1 * exp(-1/2*matrix) + v0;
+    C = v1 * exp(-1/2*matrix) + v0 * eye(size(matrix));
 
 end
