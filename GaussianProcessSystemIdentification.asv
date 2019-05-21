@@ -44,8 +44,6 @@ end
 
 
 %% Finding optimum hyperparameters
-train_samples_output = samples(1,:);
-train_samples_input = samples(2,:);
 population_size = 40;                               %classic setting = 10x num of hyperparameters
 maxIter = 100;
 min_hyperparam = [0; 0; 6; 0];
@@ -53,13 +51,13 @@ max_hyperparam = [1; 1; 7; 0.01];
 F_weight = 0.8;                                     %classic setting = 0.8
 CR = 0.9;                                           %classic setting = 0.9
 
-opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR);
+opt_hyper_param = RunDiffEvolutionOpt(samples, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR);
 
 
 
 %% Getting kernel
-K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyp_param);
-log_likelihood_K = LogLikelihood(K, samples(1,1:end-1));
+K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyper_param);
+log_likelihood_K = LogLikelihood(K,(samples(1,1:end-1)'))
 noisy_K_inv = inv(K + Q*(eye(size(K)))); 
 
 %% Prediction
@@ -77,11 +75,11 @@ for i = 1:length(sim_time)-1
     
     u = samples(2,idx);
     
-    k_vec =  CovFunc(samples(:,1:end-1), [sim_y(i);u], opt_hyp_param);
+    k_vec =  CovFunc(samples(:,1:end-1), [sim_y(i);u]);
     
     sim_y(i+1) = k_vec' * (noisy_K_inv * samples(1,2:end)');
     
-    k = CovFunc([sim_y(i);u],[sim_y(i);u], opt_hyp_param);
+    k = CovFunc([sim_y(i);u],[sim_y(i);u]);
     
     sigma_pred(i) = k - k_vec' * noisy_K_inv * k_vec + v0;
     
