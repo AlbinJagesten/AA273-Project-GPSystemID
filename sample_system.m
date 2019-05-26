@@ -1,4 +1,4 @@
-function [samples sample_time] = ...
+function [samples,sample_time] = ...
     sample_system(dynamics, sample_rate, control_inpute_rate, ...
                   control_sequence, Q)
 
@@ -10,20 +10,23 @@ function [samples sample_time] = ...
     % System Setup
 
     %state variable
-    y = zeros(length(t),1);
     sample_time = [];
     samples = [];
+    state_dim = length(Q);
+    state = zeros(state_dim,1);
+    Q_sqrt = sqrtm(Q);
 
     % Simulating the system
     for i = 1:length(t)-1
 
         idx = round(dt*i/control_inpute_rate) + 1;
 
-        y(i+1) = dynamics(y(i),control_sequence(idx),dt);
+        state = dynamics(state,control_sequence(:,idx),dt);
 
         if mod(i,round(sample_rate/dt)) == 0
             sample_time = [sample_time t(i)];
-            samples = [samples [y(i)+sqrt(Q)*randn;control_sequence(idx)]];
+            samples = [samples [state+Q_sqrt*randn(state_dim,1);...
+                                control_sequence(:,idx)]];
         end   
 
     end

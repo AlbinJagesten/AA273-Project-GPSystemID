@@ -7,9 +7,9 @@ function C = CovFunc(X,Y, hyper_param)
     %v1 = 6.2618;
     %v0 = 0.0045;
     
-    w = [hyper_param(1); hyper_param(2)] ;
-    v1 = hyper_param(3);
-    v0 = hyper_param(4);
+    v0 = hyper_param(1);
+    v1 = hyper_param(2);    
+    w = hyper_param(3:end);
     
     matrix = zeros(size(X,2),size(Y,2));
     
