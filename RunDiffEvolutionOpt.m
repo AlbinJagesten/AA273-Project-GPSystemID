@@ -1,4 +1,4 @@
-function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, CR)
+function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR)
     
     %% variable declaration and initializations
     
@@ -54,6 +54,13 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
         b = current_pop(:, scrambled_indices_2);
         c = current_pop(:, scrambled_indices_3);
         
+        %randomize F_weight to between 0.5 and 1.0 if RandomizeF_weight
+        %setting is selected
+        if (RandomizeF_weight)
+            F_weight = 0.5 + 0.5*rand();
+        end
+        F_weight
+        %generating new candidates via crossover
         new_pop = a + F_weight*(b - c);   
     
         %PERFORMING CROSSOVER BETWEEN OLD AND NEW POPULATIONS

@@ -4,5 +4,5 @@ function log_p = LogLikelihood(K,y)
     %  non-zero determinant
     %K = K + 0.1 * eye(size(K));
     
-    log_p = -0.5*logdet(K) -0.5*(y)*(pinv(K))*(y') - (N/2)*log(2*pi);
+    log_p = -0.5*log_det(K) -0.5*(y)*(pinv(K))*(y') - (N/2)*log(2*pi);
 end
