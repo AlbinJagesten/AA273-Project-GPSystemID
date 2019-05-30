@@ -1,0 +1,5 @@
+function new_y, dim] = dynamics(y,u,dt)
+
+    new_y = y-dt*[tanh(y(1)^3+u);0];
+
+end

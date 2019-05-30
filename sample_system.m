@@ -21,11 +21,11 @@ function [samples,sample_time] = ...
 
         idx = round(dt*i/control_inpute_rate) + 1;
 
-        state = dynamics(state,control_sequence(:,idx),dt);
+        state = dynamics(state, control_sequence(:,idx),dt);
 
         if mod(i,round(sample_rate/dt)) == 0
             sample_time = [sample_time t(i)];
-            samples = [samples [state+Q_sqrt*randn(state_dim,1);...
+            samples = [samples, [state + Q_sqrt*randn(state_dim,1);...
                                 control_sequence(:,idx)]];
         end   
 

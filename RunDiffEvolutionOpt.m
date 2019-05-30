@@ -1,4 +1,4 @@
-function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR)
+function opt_hyp_param = RunDiffEvolutionOpt(CovFun, train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR)
     
     %% variable declaration and initializations
     
@@ -8,7 +8,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     current_log_likelihood = zeros(1, population_size);
     
     opt_hyp_param = (min_hyperparam + max_hyperparam)/2;        %arbitrary
-    K_temp = CovFunc(train_samples_input, train_samples_input, opt_hyp_param);
+    K_temp = CovFun(train_samples_input, train_samples_input, opt_hyp_param);
     opt_log_lik = LogLikelihood(K_temp, train_samples_output);
     
     
@@ -23,7 +23,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     %% evaluating initial optimum
     
     for i = 1:population_size
-        K = CovFunc(train_samples_input, train_samples_input, current_pop(:,i));
+        K = CovFun(train_samples_input, train_samples_input, current_pop(:,i));
         current_log_likelihood(i) = LogLikelihood(K, train_samples_output);
         if current_log_likelihood(i) > opt_log_lik
             opt_log_lik = LogLikelihood(K, train_samples_output);
@@ -59,7 +59,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
         if (RandomizeF_weight)
             F_weight = 0.5 + 0.5*rand();
         end
-        F_weight
+
         %generating new candidates via crossover
         new_pop = a + F_weight*(b - c);   
     
@@ -85,7 +85,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
                end   
             end
             
-            K = CovFunc(train_samples_input, train_samples_input, new_pop(:,i));
+            K = CovFun(train_samples_input, train_samples_input, new_pop(:,i));
             new_log_likelihood = LogLikelihood(K, train_samples_output);
             if new_log_likelihood > current_log_likelihood(i)
                 current_pop(:,i) = new_pop(:,i);
