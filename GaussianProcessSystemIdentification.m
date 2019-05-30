@@ -4,8 +4,8 @@ clear
 
 sample_rate = 0.5;
 control_inpute_rate = 5;
-Q = 0*eye(3);
-control_sequence = [ones(1,20);randn(1,20)];
+Q = 0.0025*eye(3);
+control_sequence = [ones(1,5) -ones(1,5)];
 
 [samples sample_time] = ...
     sample_system(@robot_dyn, sample_rate, control_inpute_rate, ...
@@ -29,7 +29,7 @@ control_sequence = [ones(1,20);randn(1,20)];
 %% Prediction
 
 control_inpute_rate = 5;
-control_sequence = [ones(1,20);randn(1,20)];
+control_sequence = [-ones(1,5) ones(1,5)];
 
 [sim_time, sim_y, sigma2, y] = simulate_system(@CovFunc, hyper_params, ...
     samples, sample_rate, control_sequence, control_inpute_rate,@robot_dyn);
@@ -51,3 +51,6 @@ figure
 hold on
 plot(y(1,:),y(2,:))
 plot(sim_y(1,:),sim_y(2,:),'--')
+
+load gong.mat;
+sound(y);
