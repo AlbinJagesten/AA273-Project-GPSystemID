@@ -7,9 +7,10 @@ function C = CovFunc(X,Y, hyper_param)
     four_hyper_params = 1;
     three_hyper_params = 2;
     two_hyper_params = 3;
+    Locally_Periodic_Kernel = 4;
     
     %CHOOSE MODE
-    mode = three_hyper_params;
+    mode = Locally_Periodic_Kernel;
     
     if (mode == hyper_param_from_paper) 
         w = [0.2948; 0.1323];
@@ -70,6 +71,22 @@ function C = CovFunc(X,Y, hyper_param)
         end
 
         C = v1 * exp(-1/2*matrix);
+    elseif (mode == Locally_Periodic_Kernel) 
+
+        sigma = hyper_param(1);
+        l = hyper_param(2);
+        p = hyper_param(3);
+        
+        matrix = zeros(size(X,2),size(Y,2));
+
+        for i = 1:size(X,2)
+            for j = 1:size(Y,2)
+                matrix(i,j) = sigma^2*exp(-2/l^2*sin(pi*...
+                    sum(abs(X(:,i) - Y(:,j)))/p)^2)*...
+                    exp(-1/(2*l^2)*sum(abs(X(:,i) - Y(:,j))));
+            end
+        end
+        
     end
 
 end
