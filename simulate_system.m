@@ -1,8 +1,11 @@
-function [sim_time, sim_y, sigma2, y] = ...
-    simulate_system(CovFunc, opt_hyp_params, samples, sample_rate, ...
-    control_sequence, control_inpute_rate, dynamics)
-
-    total_time = control_inpute_rate * (length(control_sequence)-1);
+function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
+    simulate_system(CovFunc, opt_hyp_params, gpr_model, samples, sample_rate, ...
+    control_sequence, control_input_rate, dynamics, dt)
+    
+    % Simulation Parameters
+    total_time = control_input_rate * (length(control_sequence)-1);
+    t = 1:dt:total_time;    
+    sim_time = 0:sample_rate:total_time;
     
     K_dim = size(samples,2)-1;
     num_param_sets = size(opt_hyp_params,2);
@@ -15,33 +18,41 @@ function [sim_time, sim_y, sigma2, y] = ...
     
     end
 
-    sim_time = 0:sample_rate:total_time;
-    sim_y = zeros(num_param_sets,length(sim_time));
+    pred_y = zeros(num_param_sets,length(sim_time));
+    toolbox_pred_y = zeros(num_param_sets,length(sim_time));
     sigma2 = zeros(num_param_sets,length(sim_time));
+    
     state = zeros(num_param_sets,1);
-
-    y = zeros(num_param_sets,length(sim_time));
-
-    for i = 1:length(sim_time)-1 
+    true_y = zeros(num_param_sets,length(sim_time));
+    
+    
+    for i = 1:length(t)-1 
         
-        idx = round(sample_rate*i/control_inpute_rate) + 1;
+        idx = round(dt*i/control_input_rate) + 1;
         u = control_sequence(:,idx);
+                
+        %ADVANCING THE "TRUE" STATE 
+        state = dynamics(state, u, dt);
+        true_y(:, i+1) = state;
         
-        for j = 1:num_param_sets
+        if mod(i,round(sample_rate/dt)) == 0
+            index = (i/round(sample_rate/dt));
+            %PREDICTING FOR EACH ELEMENT OF OUTPUT Y FOR THIS TIME STEP
+            for j = 1:num_param_sets
 
-            k_vec =  CovFunc(samples(:,1:end-1), [sim_y(:,i);u], opt_hyp_params(:,j));
+                %PREDICTING USING OUR MODEL
+                %finding the new kernel values using the new point
+                k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j));
+                k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j));
 
-            sim_y(j,i+1) = k_vec' * (K_inv(:,:,j) * samples(j,2:end)');
+                %predicting y and obtaining the variance sigma 
+                pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * samples(j,2:end)');
+                sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
 
-            k = CovFunc([sim_y(:,i);u],[sim_y(:,i);u], opt_hyp_params(:,j));
-
-            sigma2(j,i+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
-        
+                %PREDICTING USING MATLAB TOOLBOX GPR
+                toolbox_pred_y(j, index+1) = predict(gpr_model{j}, [toolbox_pred_y(:,index)', u']);
+            end
         end
-        
-        state = dynamics(state,u,sample_rate);
-
-        y(:,i+1) = state;
 
     end
 

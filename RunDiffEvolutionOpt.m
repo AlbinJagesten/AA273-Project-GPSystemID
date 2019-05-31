@@ -36,7 +36,10 @@ function opt_hyp_param = RunDiffEvolutionOpt(CovFun, train_samples_output,train_
     %% iterating to find optimum parameters
     
     for iter = 1:maxIter
+        
+        %printing iteration number
         iter
+        
         % GENERATING NEW CANDIDATE POPULATION
         %scrambling the population and creating 3 new sets offsets are used to make 1 set of scrambled indices into 3 by
         %shifting the indices by this constant offset; this is better than using randperm 3 times as this ensures that 

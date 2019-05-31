@@ -1,9 +1,8 @@
 function [samples,sample_time] = ...
     sample_system(dynamics, sample_rate, control_inpute_rate, ...
-                  control_sequence, Q)
+                  control_sequence, Q, dt)
 
     % Simulation Parameters
-    dt = 0.001;
     total_time = control_inpute_rate * (length(control_sequence) - 1);
     t = 1:dt:total_time;
 
