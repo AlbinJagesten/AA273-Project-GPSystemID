@@ -42,22 +42,27 @@ for i = 1:length(t)-1
     
 end
 
-
-%% Finding optimum hyperparameters
 %set inputs and outputs
 train_samples_output = samples(1,2:end);
 train_samples_input = samples(:,1:end-1);
+
+%% Test
+
+gprMdl = fitrgp(train_samples_input',train_samples_output','KernelFunction','ardrationalquadratic');
+
+
+%% Finding optimum hyperparameters
 
 %set population size for the DE algorithm; approx 10x number of
 %hyperparameters is a classic setting; however >40 shows limited improvement
 population_size = 40; 
 
 %number of iterations after which the algorithm will stop
-maxIter = 200;
+maxIter = 1;
 
 %range for the hyperparameters we are tuning; the algorithm as written will ONLY
 %search in this range
-min_hyperparam = [0; 0; 0; 0.0005];
+min_hyperparam = [0; 0; 0; 0];
 max_hyperparam = [7; 7; 7; 7];
 
 %Paramters to tune for the DE algorithm; if RandomizeF_weight is set then a
@@ -68,8 +73,6 @@ CR = 0.9;                                           %classic setting = 0.9
 
 %calling the DE opt function
 opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR);
-
-
 
 %% Hardcode Hyperparameters
 %to hardcode the hyperparameters for testing purposes
@@ -91,9 +94,11 @@ K_inv = pinv(K);
 dt = 0.5;
 sim_time = 0:dt:total_time;
 sim_y = zeros(length(sim_time),1);
+test_y = zeros(length(sim_time),1);
 sigma_pred = zeros(length(sim_time),1);
 
 u = umin+rand()*(umax-umin);
+control_inpute_rate = 3;
 
 y = zeros(length(sim_time),1);
 
@@ -111,6 +116,8 @@ for i = 1:length(sim_time)-1
     
     sigma_pred(i+1) = k - k_vec' * K_inv * k_vec;
     
+    test_y(i+1) = predict(gprMdl,[test_y(i),u]);
+    
     y(i+1) = dynamics(y(i),u,dt);
     
 end
@@ -119,6 +126,7 @@ end
 close all
 hold on;
 plot(sim_time,y);
-plot(sim_time,sim_y,'-.');
-plot(sim_time,sim_y+2*sqrt(sigma_pred),'r',sim_time,sim_y-2*sqrt(sigma_pred),'r');
+%plot(sim_time,sim_y,'-.');
+plot(sim_time,test_y,'-.');
+%plot(sim_time,sim_y+2*sqrt(sigma_pred),'r',sim_time,sim_y-2*sqrt(sigma_pred),'r');
 legend('True trajectory', 'Predicted trajectory', 'Samples used for training', 'One sigma error bound');
