@@ -83,7 +83,7 @@ function C = CovFunc(X,Y, hyper_param, mode)
             for j = 1:size(Y,2)
                 matrix(i,j) = sigma^2*exp(-2/l^2*sin(pi*...
                     sum(abs(X(:,i) - Y(:,j)))/p)^2)*...
-                    exp(-1/(2*l^2)*sum(abs(X(:,i) - Y(:,j))));
+                    exp(-1/(2*l^2)*sum((X(:,i) - Y(:,j)).^2));
             end
         end
         
