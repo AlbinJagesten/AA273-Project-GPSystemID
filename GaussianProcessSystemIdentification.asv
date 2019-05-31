@@ -10,11 +10,7 @@ dynamical_sys = @robot_dyn;
 sys_dim = 3;
 
 %choosing covariance function
-hyper_param_from_paper = 0;
-four_hyper_params = 1;
-three_hyper_params = 2;
-two_hyper_params = 3;
-cov_fn_mode = [2, 2, 2];
+cov_fn = @CovFunc;
 
 %choosing time step for simulation
 dt = 0.001;
@@ -24,8 +20,7 @@ sample_rate = 0.5;
 control_inpute_rate = 5;
 Q = 0.0025*eye(sys_dim);
 
-control_index = linspace(0,1,10);
-control_sequence = [sin(control_index)];
+control_sequence = [ones(1,5), -ones(1,5)];
 
 [samples, sample_time] = ...
     sample_system(dynamical_sys, sample_rate, control_inpute_rate, ...
@@ -42,7 +37,7 @@ control_sequence = [sin(control_index)];
     for i = 1:sys_dim
        
         train_samples_output = samples(i,2:end);
-        hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
+        hyper_param = find_param(train_samples_output, train_samples_input, cov_fn);
         hyper_params = [hyper_params hyper_param];
         
     end
@@ -58,11 +53,12 @@ end
 %% Prediction
 
 pred_control_input_rate = 5;
-control_index = linspace(0,1,10);
-pred_control_sequence = [cos(control_index)];
+timestep
 
-[sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = simulate_system(hyper_params, gpr_model,...
-    samples, sample_rate, pred_control_sequence, pred_control_input_rate, dynamical_sys, dt, cov_fn_mode);
+pred_control_sequence = [, ones(1,5)];
+
+[sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = simulate_system(cov_fn, hyper_params, gpr_model,...
+    samples, sample_rate, pred_control_sequence, pred_control_input_rate, dynamical_sys, dt);
 
 
 %% Plots

@@ -1,4 +1,4 @@
-function C = CovFunc(X,Y, hyper_param)
+function C = CovFunc(X,Y, hyper_param, mode)
 
     %X : #states x #samples
     %Y : #states x #samples
@@ -10,7 +10,7 @@ function C = CovFunc(X,Y, hyper_param)
     Locally_Periodic_Kernel = 4;
     
     %CHOOSE MODE
-    mode = Locally_Periodic_Kernel;
+    %mode = three_hyper_params;
     
     if (mode == hyper_param_from_paper) 
         w = [0.2948; 0.1323];

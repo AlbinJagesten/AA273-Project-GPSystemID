@@ -1,4 +1,4 @@
-function hyper_param = find_param(train_samples_output,train_samples_input, CovFun)
+function hyper_param = find_param(train_samples_output,train_samples_input, mode)
 
     dim = size(train_samples_input,1) + 2;
 
@@ -9,7 +9,7 @@ function hyper_param = find_param(train_samples_output,train_samples_input, CovF
     population_size = dim*10; 
 
     %number of iterations after which the algorithm will stop
-    maxIter = 100;
+    maxIter = 300;
 
     %range for the hyperparameters we are tuning; the algorithm as written will ONLY
     %search in this range
@@ -23,8 +23,8 @@ function hyper_param = find_param(train_samples_output,train_samples_input, CovF
     CR = 0.9;                                           %classic setting = 0.9
 
     %calling the DE opt function
-    hyper_param = RunDiffEvolutionOpt(CovFun, train_samples_output,...
+    hyper_param = RunDiffEvolutionOpt(train_samples_output,...
         train_samples_input, population_size, maxIter, min_hyperparam, ...
-        max_hyperparam, F_weight, RandomizeF_weight, CR);
+        max_hyperparam, F_weight, RandomizeF_weight, CR, mode);
 
 end

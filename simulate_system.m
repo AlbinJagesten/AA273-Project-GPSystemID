@@ -1,10 +1,10 @@
 function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
-    simulate_system(CovFunc, opt_hyp_params, gpr_model, samples, sample_rate, ...
-    control_sequence, control_input_rate, dynamics, dt)
+    simulate_system(opt_hyp_params, gpr_model, samples, sample_rate, ...
+    control_sequence, control_input_rate, dynamics, dt, cov_fn_mode)
     
     % Simulation Parameters
     total_time = control_input_rate * (length(control_sequence)-1);
-    t = 1:dt:total_time;    
+    t = 0:dt:total_time;    
     sim_time = 0:sample_rate:total_time;
     
     K_dim = size(samples,2)-1;
@@ -13,7 +13,7 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
     
     for i = 1:num_param_sets
 
-        K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyp_params(:,i));
+        K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyp_params(:,i), cov_fn_mode(i));
         K_inv(:,:,i) = pinv(K);
     
     end
@@ -42,8 +42,8 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
 
                 %PREDICTING USING OUR MODEL
                 %finding the new kernel values using the new point
-                k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j));
-                k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j));
+                k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
+                k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
 
                 %predicting y and obtaining the variance sigma 
                 pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * samples(j,2:end)');
