@@ -11,13 +11,14 @@ sys_dim = 2;
 
 %choosing covariance function
 global hyper_param_from_paper; hyper_param_from_paper = 0;
-global four_hyper_params; four_hyper_params = 1;
-global three_hyper_params; three_hyper_params = 2;
-global two_hyper_params; two_hyper_params = 3;
+global ArdSquaredExp_four_hyper_params; ArdSquaredExp_four_hyper_params = 1;
+global ArdSquaredExp_three_hyper_params; ArdSquaredExp_three_hyper_params = 2;
+global ArdSquaredExp_two_hyper_params; ArdSquaredExp_two_hyper_params = 3;
 global Locally_Periodic_Kernel; Locally_Periodic_Kernel = 4;
 global Periodic_Kernel; Periodic_Kernel = 5;
+global ArdRationalQuadratic; ArdRationalQuadratic = 6;
 
-cov_fn_mode = [5 5];
+cov_fn_mode = [6 6];
 
 %choosing time step for simulation
 dt = 0.001;
@@ -25,12 +26,12 @@ dt = 0.001;
 
 %% Sample System
 sample_rate = 0.5;
-control_input_rate = 4;
+control_input_rate = 1;
 Q = 0.0025*eye(sys_dim);
 
 %control_index = linspace(0,10,20);
 %control_sequence = [sin(control_index)];
-control_sequence = cumsum(sign(randn(1,25)));
+control_sequence = cumsum(sign(randn(1,50)));
 
 %control_sequence = 2.6*rand(1,20)-1.3;
 
@@ -50,7 +51,7 @@ control_sequence = cumsum(sign(randn(1,25)));
        
         train_samples_output = samples(i,2:end);
         hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
-        hyper_params = [hyper_params hyper_param];
+        hyper_params = [hyper_params, hyper_param];
         
     end
 
@@ -88,34 +89,36 @@ for i = 1:sys_dim
     legend('True trajectory', 'Predicted trajectory using our GPR with DE optimizer', 'Predicted trajectory using MATLAB toolbox');
     title(['Prediction; train control rate = ', num2str(control_input_rate),', test control rate = ', num2str(pred_control_input_rate)])
     xlabel('time')
+    ylabel('Output')
 end
 
-figure
-plot(sample_time, samples(i,:),'-.');
+% figure
+% plot(sample_time, samples(i,:),'-.');
 
 %load gong.mat;
 %sound(y);
 
 %% 
-figure
-hold on;
-plot(true_y(1,:), true_y(2,:),'k','LineWidth',1.3);
-plot(toolbox_pred_y(1,:), toolbox_pred_y(2,:),'r--','LineWidth',1.3);
+% figure
+% hold on;
+% plot(true_y(1,:), true_y(2,:),'k','LineWidth',1.3);
+% plot(toolbox_pred_y(1,:), toolbox_pred_y(2,:),'r--','LineWidth',1.3);
 
 %% Subplots
-close all
-figure
-
-subplot(2,1,1);
-plot(sample_time, samples(1,:),'-.');
-title(['Training data; train control rate = ', num2str(control_input_rate)])
-xlabel('time')
-
-subplot(2,1,2);
-hold on;
-plot(t, true_y(1,:),'k','LineWidth',1.3);
-plot(sim_time, pred_y(1,:),'b--','LineWidth',1.3);
-plot(sim_time, toolbox_pred_y(1,:),'r-.','LineWidth',1.3);
-legend('True trajectory', 'Predicted trajectory using our GPR with DE optimizer', 'Predicted trajectory using MATLAB toolbox');
-title(['Prediction; test control rate = ', num2str(pred_control_input_rate)])
-xlabel('time')
+% close all
+% figure
+% 
+% subplot(2,1,1);
+% plot(sample_time, samples(1,:),'-.');
+% title(['Training data; train control rate = ', num2str(control_input_rate)])
+% xlabel('time')
+% 
+% 
+% subplot(2,1,2);
+% hold on;
+% plot(t, true_y(1,:),'k','LineWidth',1.3);
+% plot(sim_time, pred_y(1,:),'b--','LineWidth',1.3);
+% plot(sim_time, toolbox_pred_y(1,:),'r-.','LineWidth',1.3);
+% legend('True trajectory', 'Predicted trajectory using our GPR with DE optimizer', 'Predicted trajectory using MATLAB toolbox');
+% title(['Prediction; test control rate = ', num2str(pred_control_input_rate)])
+% xlabel('time')

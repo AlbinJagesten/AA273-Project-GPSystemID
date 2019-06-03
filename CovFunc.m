@@ -1,14 +1,15 @@
 function C = CovFunc(X,Y, hyper_param, mode)
-
+    
     %X : #states x #samples
     %Y : #states x #samples
     
     global hyper_param_from_paper;
-    global four_hyper_params;
-    global three_hyper_params;
-    global two_hyper_params;
+    global ArdSquaredExp_four_hyper_params;
+    global ArdSquaredExp_three_hyper_params;
+    global ArdSquaredExp_two_hyper_params;
     global Locally_Periodic_Kernel;
     global Periodic_Kernel;
+    global ArdRationalQuadratic;
     
     %CHOOSE MODE
     %mode = three_hyper_params;
@@ -28,7 +29,7 @@ function C = CovFunc(X,Y, hyper_param, mode)
 
         C = v1 * exp(-1/2*matrix) + v0 * eye(size(matrix));
     
-    elseif (mode == four_hyper_params) 
+    elseif (mode == ArdSquaredExp_four_hyper_params) 
         v0 = hyper_param(1);
         v1 = hyper_param(2);    
         w = hyper_param(3:end);
@@ -43,7 +44,7 @@ function C = CovFunc(X,Y, hyper_param, mode)
 
         C = v1 * exp(-1/2*matrix) + v0 * eye(size(matrix));
     
-    elseif (mode == three_hyper_params) 
+    elseif (mode == ArdSquaredExp_three_hyper_params) 
         v0 = hyper_param(1);
         v1 = hyper_param(2);    
         w = hyper_param(3);
@@ -59,7 +60,7 @@ function C = CovFunc(X,Y, hyper_param, mode)
         C = v1 * exp(-1/2*matrix) + v0 * eye(size(matrix));
     
         
-    elseif (mode == two_hyper_params) 
+    elseif (mode == ArdSquaredExp_two_hyper_params) 
         v1 = hyper_param(1);    
         w = hyper_param(2);
 
@@ -103,6 +104,20 @@ function C = CovFunc(X,Y, hyper_param, mode)
             for j = 1:size(Y,2)
                 C(i,j) = sigma^2*exp(-2/l^2*sin(pi*...
                     sum(abs(X(:,i) - Y(:,j)))/p)^2);
+            end
+        end
+    
+        
+    elseif (mode == ArdRationalQuadratic) 
+        v0 = hyper_param(1);
+        alpha = hyper_param(2);    
+        w = hyper_param(3:end);
+
+        C = zeros(size(X,2),size(Y,2));
+
+        for i = 1:size(X,2)
+            for j = 1:size(Y,2)
+                C(i,j) = v0*((1 + (1/(2*alpha))*(w' * ((X(:,i) - Y(:,j)).^2)))^(-alpha));
             end
         end
     end
