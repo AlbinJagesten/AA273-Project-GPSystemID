@@ -9,7 +9,7 @@ function hyper_param = find_param(train_samples_output,train_samples_input, mode
     population_size = dim*10; 
 
     %number of iterations after which the algorithm will stop
-    maxIter = 300;
+    maxIter = 1000;
 
     %range for the hyperparameters we are tuning; the algorithm as written will ONLY
     %search in this range

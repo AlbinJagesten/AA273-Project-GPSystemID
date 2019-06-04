@@ -111,18 +111,19 @@ function C = CovFunc(X,Y, hyper_param, mode)
         end
     elseif (mode == ardsquaredexponential) 
         
-        v1 = hyper_param(1);  
-        w = hyper_param(2:size(X,1)+1);
+        sigma2 = hyper_param(size(X,1)+1);  
+        len = hyper_param(1:size(X,1));
 
-        matrix = zeros(size(X,2),size(Y,2));
+        C = zeros(size(X,2),size(Y,2));
 
         for i = 1:size(X,2)
             for j = 1:size(Y,2)
-                matrix(i,j) = w' * ((X(:,i) - Y(:,j)).^2);
+                C(i,j) = sigma2 * exp(-1/2*sum(((X(:,i) - Y(:,j)).^2).*len));
+                if j == i
+                    C(i,j) = C(i,j) + hyper_param(5)^2;
+                end
             end
         end
-
-        C = v1 * exp(-1/2*matrix);
     end
         
     

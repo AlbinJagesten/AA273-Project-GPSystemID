@@ -49,8 +49,11 @@ delta_samples = delta_samples;
     for i = 1:sys_dim
        
         train_samples_output = delta_samples(i,:);
-        hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
+        %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
+        hyper_param = Rprop(train_samples_output, train_samples_input);
         hyper_params = [hyper_params hyper_param];
+        K=CovFunc(train_samples_input,train_samples_input,hyper_params(:,i),cov_fn_mode(i));
+        LogLikelihood(K,delta_samples(i,:))
         
     end
 
@@ -63,6 +66,8 @@ for i = 1:sys_dim
     gpr_model{i} = fitrgp(train_samples_input', train_samples_output', 'KernelFunction', 'ardexponential');
 
 end
+
+gpr_model{1}.KernelInformation.KernelParameters
 
 
 %% Prediction
@@ -81,10 +86,22 @@ for i = 1:sys_dim
     subplot(sys_dim,1,i);
     hold on;
     plot(t, true_y(i,:),'k','LineWidth',1.3);
-    plot(sim_time, pred_y(i,:),'r--','LineWidth',1.3);
+    plot(sim_time, pred_y(i,:),'b--','LineWidth',1.3);
     plot(sim_time, toolbox_pred_y(i,:),'r-.','LineWidth',1.3);
-    legend('True trajectory', 'Predicted trajectory using our GPR with DE optimizer', 'Predicted trajectory using MATLAB toolbox');
+    legend('True trajectory', 'Predicted trajectory using our GPR with Rprop optimizer', 'Predicted trajectory using MATLAB toolbox');
     title(['Prediction; train control rate = ', num2str(control_input_rate),', test control rate = ', num2str(pred_control_input_rate)])
     xlabel('time')
 end
+return
+%% trajectory plot
+
+figure
+hold on;
+plot(true_y(1,:), true_y(2,:),'k','LineWidth',1.3);
+plot(pred_y(1,:), pred_y(2,:),'b--','LineWidth',1.3);
+plot(toolbox_pred_y(1,:), toolbox_pred_y(2,:),'r-.','LineWidth',1.3);
+legend('True trajectory', 'Predicted trajectory using our GPR with Rprop optimizer', 'Predicted trajectory using MATLAB toolbox');
+title('Prediction robot trajectory')
+xlabel('x')
+ylabel('y')
 
