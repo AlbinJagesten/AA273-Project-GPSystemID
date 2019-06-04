@@ -1,12 +1,12 @@
 function hyper_param = Rprop(y,X)
 
 %Parameters
-num_iter = 200;
+num_iter = 1000;
 eta_p = 1.2;
 eta_n = 0.5;
 delta = 0.1*ones(5,1);
 min_delta = 1e-6;
-max_delta = 50;
+max_delta = 500;
 dJold = zeros(5,1);
 hyper_param = log(0.1*rand(5,1));
 epsilon = 1e-3;

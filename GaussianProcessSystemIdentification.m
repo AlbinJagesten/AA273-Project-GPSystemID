@@ -11,9 +11,9 @@ sys_dim = 2;
 
 %choosing covariance function
 global hyper_param_from_paper; hyper_param_from_paper = 0;
-global four_hyper_params; four_hyper_params = 1;
-global three_hyper_params; three_hyper_params = 2;
-global two_hyper_params; two_hyper_params = 3;
+global ArdSquaredExp_four_hyper_params; ArdSquaredExp_four_hyper_params = 1;
+global ArdSquaredExp_three_hyper_params; ArdSquaredExp_three_hyper_params = 2;
+global ArdSquaredExp_two_hyper_params; ArdSquaredExp_two_hyper_params = 3;
 global Locally_Periodic_Kernel; Locally_Periodic_Kernel = 4;
 global Periodic_Kernel; Periodic_Kernel = 5;
 global ardsquaredexponential; ardsquaredexponential = 6;
@@ -38,16 +38,16 @@ control_sequence = [sin(control_index)];
 
 delta_samples = samples(1:sys_dim,2:end) - samples(1:sys_dim,1:end-1);
 delta_samples = delta_samples;
-              
+
 %% Finding optimum hyperparameters using our optimizer
 
     train_samples_input = samples(:,1:end-1);
 
     hyper_params = [];
-    
+
     %finding optimum hyperparameters for each element of output vector
     for i = 1:sys_dim
-       
+
         train_samples_output = delta_samples(i,:);
         %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
         hyper_param = Rprop(train_samples_output, train_samples_input);
@@ -91,6 +91,7 @@ for i = 1:sys_dim
     legend('True trajectory', 'Predicted trajectory using our GPR with Rprop optimizer', 'Predicted trajectory using MATLAB toolbox');
     title(['Prediction; train control rate = ', num2str(control_input_rate),', test control rate = ', num2str(pred_control_input_rate)])
     xlabel('time')
+    ylabel('Output')
 end
 return
 %% trajectory plot
