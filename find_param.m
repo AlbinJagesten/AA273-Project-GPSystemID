@@ -6,10 +6,10 @@ function hyper_param = find_param(train_samples_output,train_samples_input, mode
 
     %set population size for the DE algorithm; approx 10x number of
     %hyperparameters is a classic setting; however >40 shows limited improvement
-    population_size = dim*10; 
+    population_size = dim*10;
 
     %number of iterations after which the algorithm will stop
-    maxIter = 100;
+    maxIter = 300;
 
     %range for the hyperparameters we are tuning; the algorithm as written will ONLY
     %search in this range
