@@ -37,20 +37,25 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
         
         if mod(i,round(sample_rate/dt)) == 0
             index = (i/round(sample_rate/dt));
+            if index == 1
+                pred_y(:,index) = state;
+                toolbox_pred_y(:, index) = state;
+            else
             %PREDICTING FOR EACH ELEMENT OF OUTPUT Y FOR THIS TIME STEP
-            for j = 1:num_param_sets
+                for j = 1:num_param_sets
 
-                %PREDICTING USING OUR MODEL
-                %finding the new kernel values using the new point
-                k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
-                k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
+                    %PREDICTING USING OUR MODEL
+                    %finding the new kernel values using the new point
+                    k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
+                    k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
 
-                %predicting y and obtaining the variance sigma 
-                pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * samples(j,2:end)');
-                sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
+                    %predicting y and obtaining the variance sigma 
+                    pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * (samples(j,2:end)'-samples(j,1:end-1)'))+pred_y(j,index);
+                    sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
 
-                %PREDICTING USING MATLAB TOOLBOX GPR
-                toolbox_pred_y(j, index+1) = predict(gpr_model{j}, [toolbox_pred_y(:,index)', u']);
+                    %PREDICTING USING MATLAB TOOLBOX GPR
+                    toolbox_pred_y(j, index+1) = predict(gpr_model{j}, [toolbox_pred_y(:,index)' , u'])+toolbox_pred_y(j,index)';
+                end
             end
         end
 

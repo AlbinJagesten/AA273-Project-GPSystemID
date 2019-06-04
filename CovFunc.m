@@ -1,5 +1,8 @@
 function C = CovFunc(X,Y, hyper_param, mode)
 
+    X = X;
+    Y = Y;
+
     %X : #states x #samples
     %Y : #states x #samples
     
@@ -9,6 +12,7 @@ function C = CovFunc(X,Y, hyper_param, mode)
     global two_hyper_params;
     global Locally_Periodic_Kernel;
     global Periodic_Kernel;
+    global ardsquaredexponential;
     
     %CHOOSE MODE
     %mode = three_hyper_params;
@@ -105,6 +109,20 @@ function C = CovFunc(X,Y, hyper_param, mode)
                     sum(abs(X(:,i) - Y(:,j)))/p)^2);
             end
         end
+    elseif (mode == ardsquaredexponential) 
+        
+        v1 = hyper_param(1);  
+        w = hyper_param(2:size(X,1)+1);
+
+        matrix = zeros(size(X,2),size(Y,2));
+
+        for i = 1:size(X,2)
+            for j = 1:size(Y,2)
+                matrix(i,j) = w' * ((X(:,i) - Y(:,j)).^2);
+            end
+        end
+
+        C = v1 * exp(-1/2*matrix);
     end
         
     
