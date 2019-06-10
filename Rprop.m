@@ -1,4 +1,4 @@
-function hyper_param = Rprop(y,X)
+function hyper_param = Rprop(y,X,mode)
 
 %Parameters
 num_iter = 1000;
@@ -8,12 +8,13 @@ delta = 0.1*ones(5,1);
 min_delta = 1e-6;
 max_delta = 500;
 dJold = zeros(5,1);
-hyper_param = log(0.1*rand(5,1));
+hyper_param = log(rand(2+size(X,1),1));
 epsilon = 1e-3;
 
 for i = 1:num_iter
     
-    dJ = find_grad(y,X,hyper_param);
+    dJ = find_grad(y,X,hyper_param,mode);
+    %dJ = num_grad_cov(y,X,hyper_param,mode)
 
 %     if mod(i,100) == 0
 %         fprintf('Iteration %d, norm %.3f\n',i,norm(dJ - dJold))

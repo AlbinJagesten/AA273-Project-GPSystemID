@@ -96,31 +96,37 @@ function C = CovFunc(X,Y, hyper_param, mode)
 
     elseif (mode == Periodic_Kernel)
 
-        sigma = hyper_param(1);
-        l = hyper_param(2);
-        p = hyper_param(3);
+        v0 = hyper_param(1);
+        v1 = hyper_param(2);
+        l = hyper_param(3);
+        p = hyper_param(4);
 
         C = zeros(size(X,2),size(Y,2));
 
         for i = 1:size(X,2)
             for j = 1:size(Y,2)
-                C(i,j) = sigma^2*exp(-2/l^2*sin(pi*...
-                    sum(abs(X(:,i) - Y(:,j)))/p)^2);
+                C(i,j) = v1*exp(-2*l^2*sin(pi*...
+                    sum(abs(X(:,i) - Y(:,j)))*p)^2);
+                if j == i
+                    C(i,j) = C(i,j) + v0;
+                end
             end
         end
+        return
 
     elseif (mode == ardsquaredexponential) 
         
-        sigma2 = hyper_param(size(X,1)+1);  
-        len = hyper_param(1:size(X,1));
+        v0 = hyper_param(1);
+        v1 = hyper_param(2);  
+        len = hyper_param(3:2+size(X,1));
 
         C = zeros(size(X,2),size(Y,2));
 
         for i = 1:size(X,2)
             for j = 1:size(Y,2)
-                C(i,j) = sigma2 * exp(-1/2*sum(((X(:,i) - Y(:,j)).^2).*len));
+                C(i,j) = v1 * exp(-1/2*sum(((X(:,i) - Y(:,j)).^2).*len));
                 if j == i
-                    C(i,j) = C(i,j) + hyper_param(5)^2;
+                    C(i,j) = C(i,j) + v0^2;
                 end
             end
         end

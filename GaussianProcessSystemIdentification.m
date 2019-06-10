@@ -18,7 +18,7 @@ global Locally_Periodic_Kernel; Locally_Periodic_Kernel = 4;
 global Periodic_Kernel; Periodic_Kernel = 5;
 global ardsquaredexponential; ardsquaredexponential = 6;
 
-cov_fn_mode = [6 6];
+cov_fn_mode = [5 5];
 
 %choosing time step for simulation
 dt = 0.001;
@@ -50,7 +50,7 @@ delta_samples = delta_samples;
 
         train_samples_output = delta_samples(i,:);
         %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
-        hyper_param = Rprop(train_samples_output, train_samples_input);
+        hyper_param = Rprop(train_samples_output, train_samples_input,5);
         hyper_params = [hyper_params hyper_param];
         K=CovFunc(train_samples_input,train_samples_input,hyper_params(:,i),cov_fn_mode(i));
         LogLikelihood(K,delta_samples(i,:))
