@@ -1,6 +1,6 @@
 function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
     simulate_system(opt_hyp_params, gpr_model, samples, sample_rate, ...
-    control_sequence, control_input_rate, dynamics, dt, cov_fn)
+    control_sequence, control_input_rate, dynamics, dt, cov_fn,sys_dim,delta)
     
     % Simulation Parameters
     total_time = control_input_rate * (length(control_sequence)-1);
@@ -10,8 +10,8 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
     K_dim = size(samples,2)-1;
     num_param_sets = size(opt_hyp_params,2);
     K_inv = zeros(K_dim,K_dim,num_param_sets);
-    sys_input = samples(:,1:end-1);
-    sys_delta = samples(:,2:end) - samples(:,1:end-1);
+    
+    [sys_input,sys_output] = GetTrainData(samples,sys_dim,delta);
     
     for i = 1:num_param_sets
 
@@ -39,26 +39,27 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
         
         if mod(i,round(sample_rate/dt)) == 0
             index = (i/round(sample_rate/dt));
-            if index == 1
-                pred_y(:,index) = state;
-                toolbox_pred_y(:, index) = state;
-            else
             %PREDICTING FOR EACH ELEMENT OF OUTPUT Y FOR THIS TIME STEP
-                for j = 1:num_param_sets
+            for j = 1:num_param_sets
 
-                    %PREDICTING USING OUR MODEL
-                    %finding the new kernel values using the new point
-                    sys_star = [pred_y(:,index);u];
-                    k_vec =  cov_fn(sys_input,sys_star,0,opt_hyp_params(:,j),'corr');
-                    k =  cov_fn(sys_star,sys_star,0,opt_hyp_params(:,j),'corr');
+                %PREDICTING USING OUR MODEL
+                %finding the new kernel values using the new point
+                sys_star = [pred_y(:,index);u];
+                k_vec =  cov_fn(sys_input,sys_star,0,opt_hyp_params(:,j),'corr');
+                k =  cov_fn(sys_star,sys_star,0,opt_hyp_params(:,j),'corr');
 
-                    %predicting y and obtaining the variance sigma 
-                    pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * sys_delta(j,:)')+pred_y(j,index);
-                    sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
+                %predicting y and obtaining the variance sigma 
+                pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * sys_output(j,:)');
+                sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
 
-                    %PREDICTING USING MATLAB TOOLBOX GPR
-                    toolbox_pred_y(j, index+1) = predict(gpr_model{j}, [toolbox_pred_y(:,index)' , u'])+toolbox_pred_y(j,index)';
+                %PREDICTING USING MATLAB TOOLBOX GPR
+                toolbox_pred_y(j,index+1) = predict(gpr_model{j}, [toolbox_pred_y(:,index)' , u']);
+
+                if delta
+                    pred_y(j,index+1) = pred_y(j,index+1)+pred_y(j,index);
+                    toolbox_pred_y(j,index+1)=toolbox_pred_y(j,index+1)+toolbox_pred_y(j,index)';
                 end
+
             end
         end
 

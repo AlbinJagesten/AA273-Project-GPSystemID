@@ -5,60 +5,74 @@ clc
 clear
 
 %choosing dynamical system
+% dynamical_sys = @robot_dyn;
+% sys_dim = 2;
 dynamical_sys = @robot_dyn;
 sys_dim = 2;
+control_dim = 1;
 
-%choosing covariance function
-global hyper_param_from_paper; hyper_param_from_paper = 0;
-global ArdSquaredExp_four_hyper_params; ArdSquaredExp_four_hyper_params = 1;
-global ArdSquaredExp_three_hyper_params; ArdSquaredExp_three_hyper_params = 2;
-global ArdSquaredExp_two_hyper_params; ArdSquaredExp_two_hyper_params = 3;
-global Locally_Periodic_Kernel; Locally_Periodic_Kernel = 4;
-global Periodic_Kernel; Periodic_Kernel = 5;
-global ardsquaredexponential; ardsquaredexponential = 6;
+%ArdSquaredExpCov
+%ArdRationalQuadraticCov
 
-cov_fn = @ArdSquaredExpCov;
+cov_fn = @ArdRationalQuadraticCov;
+delta = true;
 
 %choosing time step for simulation
 dt = 0.001;
 
+numhypArdSqExp = 2 + sys_dim + control_dim;
+numhypArdRaQu = 3 + control_dim+sys_dim;
+
+numhyp = [numhypArdRaQu];
+
 
 %% Sample System
 sample_rate = 0.5;
-control_input_rate = 1;
 Q = 0.0025*eye(sys_dim);
 
+control_input_rate = 1;
 control_index = linspace(0,10,50);
 control_sequence = [sin(control_index)];
+
+% control_input_rate = 3;
+% control_sequence = 2.6*(rand(1,20)-0.5);
 
 [samples, sample_time] = ...
     sample_system(dynamical_sys, sample_rate, control_input_rate, ...
                   control_sequence, Q, dt);
               
-[train_samples_input, train_samples_output] = GetTrainData(samples,sys_dim);
+[train_samples_input, train_samples_output] = GetTrainData(samples,sys_dim,delta);
               
 
 %% Finding optimum hyperparameters using our optimizer
 
     hyper_params = [];
+    
+    for j = 1:length(numhyp)
 
-    %finding optimum hyperparameters for each element of output vector
-    for i = 1:sys_dim
+        %finding optimum hyperparameters for each element of output vector
+        for i = 1:sys_dim
 
-        %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn_mode(i));
-        hyper_param = Rprop(train_samples_output(i,:), train_samples_input,cov_fn);
-        hyper_params = [hyper_params hyper_param];
-        K = cov_fn(train_samples_input,train_samples_input,train_samples_output(i,:),hyper_params(:,i),'cov');
-        LogLikelihood(K,train_samples_output(i,:))
-        
+            %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn,numhyp(j));
+            hyper_param = Rprop(train_samples_output(i,:), train_samples_input,cov_fn,numhyp(j));
+            hyper_params = [hyper_params hyper_param];
+            K = cov_fn(train_samples_input,train_samples_input,train_samples_output(i,:),hyper_params(:,i),'cov');
+            LogLikelihood(K,train_samples_output(i,:))
+
+        end
+    
     end
 
 %% Finding optimum hyperparameters using MATLAB toolbox
 gpr_model = cell(1,sys_dim);
 
+% Functions
+% ardrationalquadratic
+% ardexponential
+
 for i = 1:sys_dim
 
-    gpr_model{i} = fitrgp(train_samples_input', train_samples_output(i,:)', 'KernelFunction', 'ardexponential');
+    gpr_model{i} = fitrgp(train_samples_input', train_samples_output(i,:)', 'KernelFunction', 'ardrationalquadratic');
 
 end
 
@@ -66,10 +80,13 @@ end
 
 pred_control_input_rate = 1;
 control_index = linspace(5,15,50);
-pred_control_sequence = -[cos(control_index)];
+pred_control_sequence = -[2*cos(control_index)+1];
+
+% pred_control_input_rate = 5;
+% pred_control_sequence = 2.6*(rand(1,20)-0.5);
 
 [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = simulate_system(hyper_params, gpr_model,...
-    samples, sample_rate, pred_control_sequence, pred_control_input_rate, dynamical_sys, dt, cov_fn);
+    samples, sample_rate, pred_control_sequence, pred_control_input_rate, dynamical_sys, dt, cov_fn,sys_dim,delta);
 
 
 %% Plots

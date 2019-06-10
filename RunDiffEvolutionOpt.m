@@ -1,4 +1,4 @@
-function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR, mode)
+function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_input, population_size, maxIter, min_hyperparam, max_hyperparam, F_weight, RandomizeF_weight, CR, covfn)
     
     %% variable declaration and initializations
     
@@ -8,7 +8,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     current_log_likelihood = zeros(1, population_size);
     
     opt_hyp_param = (min_hyperparam + max_hyperparam)/2;        %arbitrary
-    K_temp = CovFunc(train_samples_input, train_samples_input, opt_hyp_param, mode);
+    K_temp = covfn(train_samples_input, train_samples_input,0, opt_hyp_param, 'cov');
     opt_log_lik = LogLikelihood(K_temp, train_samples_output);
     
     
@@ -23,7 +23,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
     %% evaluating initial optimum
     
     for i = 1:population_size
-        K = CovFunc(train_samples_input, train_samples_input, current_pop(:,i), mode);
+        K = covfn(train_samples_input, train_samples_input,0, current_pop(:,i), 'cov');
         current_log_likelihood(i) = LogLikelihood(K, train_samples_output);
         if current_log_likelihood(i) > opt_log_lik
             opt_log_lik = LogLikelihood(K, train_samples_output);
@@ -44,18 +44,11 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
         %scrambling the population and creating 3 new sets offsets are used to make 1 set of scrambled indices into 3 by
         %shifting the indices by this constant offset; this is better than using randperm 3 times as this ensures that 
         %3 populations are necessarily different
-        scrambled_indices_1 = randperm(population_size);
-        index_offset_1 = round(rand()*population_size) + 1; %1 is added to ensure that the min value is not zero                 
-        index_offset_2 = round(rand()*population_size) + 1; 
-        if (index_offset_1 == index_offset_2)
-            index_offset_2 = index_offset_1 + population_size/2; %arbitrary heuristic
-        end
-        scrambled_indices_2 = 1 + rem((scrambled_indices_1 + index_offset_1), population_size);
-        scrambled_indices_3 = 1 + rem((scrambled_indices_1 + index_offset_2), population_size);
+        scrambled_indeices = randperm(population_size,3);
         
-        a = current_pop(:, scrambled_indices_1);
-        b = current_pop(:, scrambled_indices_2);
-        c = current_pop(:, scrambled_indices_3);
+        a = current_pop(:, scrambled_indeices(1));
+        b = current_pop(:, scrambled_indeices(2));
+        c = current_pop(:, scrambled_indeices(3));
         
         %randomize F_weight to between 0.5 and 1.0 if RandomizeF_weight
         %setting is selected
@@ -88,7 +81,7 @@ function opt_hyp_param = RunDiffEvolutionOpt(train_samples_output,train_samples_
                end   
             end
             
-            K = CovFunc(train_samples_input, train_samples_input, new_pop(:,i), mode);
+            K = covfn(train_samples_input, train_samples_input,0, new_pop(:,i), 'cov');
             new_log_likelihood = LogLikelihood(K, train_samples_output);
             if new_log_likelihood > current_log_likelihood(i)
                 current_pop(:,i) = new_pop(:,i);
