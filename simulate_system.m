@@ -1,6 +1,6 @@
 function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
     simulate_system(opt_hyp_params, gpr_model, samples, sample_rate, ...
-    control_sequence, control_input_rate, dynamics, dt, cov_fn_mode)
+    control_sequence, control_input_rate, dynamics, dt, cov_fn)
     
     % Simulation Parameters
     total_time = control_input_rate * (length(control_sequence)-1);
@@ -10,10 +10,12 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
     K_dim = size(samples,2)-1;
     num_param_sets = size(opt_hyp_params,2);
     K_inv = zeros(K_dim,K_dim,num_param_sets);
+    sys_input = samples(:,1:end-1);
+    sys_delta = samples(:,2:end) - samples(:,1:end-1);
     
     for i = 1:num_param_sets
 
-        K = CovFunc(samples(:,1:end-1), samples(:,1:end-1), opt_hyp_params(:,i), cov_fn_mode(i));
+        K = cov_fn(sys_input,sys_input,0,opt_hyp_params(:,i),'cov');
         K_inv(:,:,i) = pinv(K);
     
     end
@@ -46,11 +48,12 @@ function [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = ...
 
                     %PREDICTING USING OUR MODEL
                     %finding the new kernel values using the new point
-                    k_vec =  CovFunc(samples(:,1:end-1), [pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
-                    k = CovFunc([pred_y(:,index);u],[pred_y(:,index);u], opt_hyp_params(:,j), cov_fn_mode(j));
+                    sys_star = [pred_y(:,index);u];
+                    k_vec =  cov_fn(sys_input,sys_star,0,opt_hyp_params(:,j),'corr');
+                    k =  cov_fn(sys_star,sys_star,0,opt_hyp_params(:,j),'corr');
 
                     %predicting y and obtaining the variance sigma 
-                    pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * (samples(j,2:end)'-samples(j,1:end-1)'))+pred_y(j,index);
+                    pred_y(j,index+1) = k_vec' * (K_inv(:,:,j) * sys_delta(j,:)')+pred_y(j,index);
                     sigma2(j,index+1) = k - k_vec' * K_inv(:,:,j) * k_vec;
 
                     %PREDICTING USING MATLAB TOOLBOX GPR
