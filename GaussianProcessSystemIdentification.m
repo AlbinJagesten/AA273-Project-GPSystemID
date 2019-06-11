@@ -8,17 +8,17 @@ clc
 %choosing dynamical system
 % dynamical_sys = @robot_dyn;
 % sys_dim = 2;
-dynamical_sys = @dynamics;
-sys_dim = 1;
+dynamical_sys = @robot_dyn_3d;
+sys_dim = 3;
 control_dim = 1;
-Rprop = false;
+useRprop = true;
 
 %ArdSquaredExpCov
 %ArdRationalQuadraticCov
 %ExponentialKernelCov
 
-cov_fn = @ArdSquaredExpCov;
-delta = false;
+cov_fn = @ArdRationalQuadraticCov;
+delta = true;
 
 %choosing time step for simulation
 dt = 0.001;
@@ -27,19 +27,19 @@ numhypArdSqExp = 2 + sys_dim + control_dim;
 numhypArdRaQu = 3 + control_dim+sys_dim;
 numhypExpKer = 3;
 
-numhyp = [numhypArdSqExp];
+numhyp = [numhypArdRaQu];
 
 
 %% Sample System
 sample_rate = 0.5;
 Q = 0.0025*eye(sys_dim);
 
-% control_input_rate = 1;
-% control_index = linspace(0,10,50);
-% control_sequence = [sin(control_index+rand(1,50))];
+control_input_rate = 1;
+control_index = linspace(0,30,100);
+control_sequence = [sin(control_index+rand(1,100))];
 
-control_input_rate = 5;
-control_sequence = 2.6*(rand(1,20)-0.5);
+% control_input_rate = 1;
+% control_sequence = 2.6*(rand(1,200)-0.5);
 
 [samples, sample_time] = ...
     sample_system(dynamical_sys, sample_rate, control_input_rate, ...
@@ -55,10 +55,10 @@ control_sequence = 2.6*(rand(1,20)-0.5);
     %finding optimum hyperparameters for each element of output vector
     for i = 1:sys_dim
 
-        if Rprop
+        if useRprop
             hyper_param = Rprop(train_samples_output(i,:), train_samples_input,cov_fn,numhyp);
         else
-            hyper_param = find_param(train_samples_output, train_samples_input, cov_fn,numhyp);
+            hyper_param = find_param(train_samples_output(i,:), train_samples_input, cov_fn,numhyp);
         end
         
         hyper_params = [hyper_params hyper_param];
@@ -83,16 +83,31 @@ end
 
 %% Prediction
 
-% pred_control_input_rate = 1;
-% control_index = linspace(7,17,50);
-% pred_control_sequence = -[cos(control_index)+1];
+rng(13)
 
-pred_control_input_rate = 5;
-pred_control_sequence = 2.6*(rand(1,20)-0.5);
+pred_control_input_rate = 1;
+control_index = linspace(7,17,50);
+pred_control_sequence = -[1.3*cos(control_index)+0.3];
+
+% pred_control_input_rate = 1;
+% pred_control_sequence = 2.6*(rand(1,20)-0.5);
 
 [sim_time, pred_y, toolbox_pred_y, sigma2, true_y, t] = simulate_system(hyper_params, gpr_model,...
     samples, sample_rate, pred_control_sequence, pred_control_input_rate, dynamical_sys, dt, cov_fn,sys_dim,delta);
 
+
+%%
+
+% figure
+% hold on
+% plot(true_y(1,:),true_y(2,:),'k')
+% plot(pred_y(1,:),pred_y(2,:),'r')
+% plot(samples(1,:),samples(2,:))
+% xlabel('x')
+% ylabel('y')
+% legend('true state','estimate','training data')
+% 
+% return
 
 %% Plots
 
