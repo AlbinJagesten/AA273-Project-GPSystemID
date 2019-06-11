@@ -3,7 +3,7 @@
 %close all
 rng(1)
 clc
-clear
+%clear
 
 %choosing dynamical system
 % dynamical_sys = @robot_dyn;
@@ -11,13 +11,14 @@ clear
 dynamical_sys = @dynamics;
 sys_dim = 1;
 control_dim = 1;
+Rprop = false;
 
 %ArdSquaredExpCov
 %ArdRationalQuadraticCov
 %ExponentialKernelCov
 
-cov_fn = @ExponentialKernelCov;
-delta = true;
+cov_fn = @ArdSquaredExpCov;
+delta = false;
 
 %choosing time step for simulation
 dt = 0.001;
@@ -26,7 +27,7 @@ numhypArdSqExp = 2 + sys_dim + control_dim;
 numhypArdRaQu = 3 + control_dim+sys_dim;
 numhypExpKer = 3;
 
-numhyp = [numhypExpKer];
+numhyp = [numhypArdSqExp];
 
 
 %% Sample System
@@ -51,20 +52,21 @@ control_sequence = 2.6*(rand(1,20)-0.5);
 
     hyper_params = [];
     
-    for j = 1:length(numhyp)
+    %finding optimum hyperparameters for each element of output vector
+    for i = 1:sys_dim
 
-        %finding optimum hyperparameters for each element of output vector
-        for i = 1:sys_dim
-
-            %hyper_param = find_param(train_samples_output, train_samples_input, cov_fn,numhyp(j));
-            hyper_param = Rprop(train_samples_output(i,:), train_samples_input,cov_fn,numhyp(j));
-            hyper_params = [hyper_params hyper_param];
-            K = cov_fn(train_samples_input,train_samples_input,train_samples_output(i,:),hyper_params(:,i),'cov');
-            LogLikelihood(K,train_samples_output(i,:))
-
+        if Rprop
+            hyper_param = Rprop(train_samples_output(i,:), train_samples_input,cov_fn,numhyp);
+        else
+            hyper_param = find_param(train_samples_output, train_samples_input, cov_fn,numhyp);
         end
-    
+        
+        hyper_params = [hyper_params hyper_param];
+        K = cov_fn(train_samples_input,train_samples_input,train_samples_output(i,:),hyper_params(:,i),'cov');
+        LogLikelihood(K,train_samples_output(i,:))
+
     end
+
 
 %% Finding optimum hyperparameters using MATLAB toolbox
 gpr_model = cell(1,sys_dim);
